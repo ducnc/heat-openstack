@@ -1,0 +1,107 @@
+heat_template_version: 2013-05-23
+
+description: Simple template to deploy a wordpress instance
+
+parameters:
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for compute instance
+    default: HaU14new
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used
+    default: m1.small
+  key:
+    type: string
+    label: Key name
+    description: Name of key-pair to be used for compute instance
+    default: my_key
+  int_network:
+    type: string
+    label: Private network name or ID
+    description: Network to attach instance to.
+    default: int_net
+  database_network:
+    type: string
+    label: Private network name or ID
+    description: Public Network to attach instance to.
+    default: priv_net
+  mysql_server:
+    type: string
+    label: IP of mysql server
+    description: IP of mysql server
+  db_name:
+    type: string
+    label: database name
+    description: database name
+  db_user:
+    type: string
+    label: database user
+    description: database user
+  db_pass:
+    type: string
+    label: database password
+    description: database password
+  
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key }
+      networks:
+        - port: { get_resource: neutron_port_int }
+        - port: { get_resource: neutron_port_db }
+      user_data: 
+        str_replace:
+          params:
+            __DB_HOST__: { get_param: mysql_server }
+            __DB_NAME__: { get_param: db_name }
+            __DB_USER__: { get_param: db_user }
+            __DB_PASS__: { get_param: db_pass }
+          template: |
+            #!/bin/sh
+            apt-get update -y
+            #
+            wget https://wordpress.org/wordpress-4.2.4.zip
+            apt-get install -y unzip apache2 php5 php5-mysql
+            unzip wordpress-4.2.4.zip
+            mv wordpress /var/www/html/
+            cd /var/www/html/
+            chown -R root:www-data wordpress/
+            cd wordpress
+            mv wp-config-sample.php wp-config.php
+            sed -i 's/database_name_here/__DB_NAME__/g' wp-config.php
+            sed -i 's/username_here/__DB_USER__/g' wp-config.php
+            sed -i 's/password_here/__DB_PASS__/g' wp-config.php
+            sed -i 's/localhost/__DB_HOST__/g' wp-config.php
+            #
+            service apache2 restart
+      user_data_format: RAW
+  neutron_port_int:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: True
+      network: { get_param: int_network }
+  neutron_port_db:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: True
+      network: { get_param: database_network }
+      
+outputs:
+  instance_name:
+    description: Name of the instance
+    value: { get_attr: [my_instance, name] }
+  instance_int_ip:
+    description: IP address of the instance
+    value: { get_attr: [my_instance, first_address] }
+  instance_database_ip:
+    description: IP address of install connect to database
+    value: { get_attr: [my_instance, networks, {get_param: database_network}, 0] }
+  instance_int_port:
+    description: Floating IP of Instance
+    value: { get_resource: neutron_port_int }

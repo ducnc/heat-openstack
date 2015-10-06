@@ -1,0 +1,93 @@
+heat_template_version: 2013-05-23
+
+description: Simple template to deploy a single compute instance
+
+parameters:
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for compute instance
+    default: HaU14new
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used
+    default: m1.small
+  key:
+    type: string
+    label: Key name
+    description: Name of key-pair to be used for compute instance
+    default: my_key
+  public_network:
+    type: string
+    label: Public network name or ID
+    description: Public network with floating IP addresses.
+    default: ext_net  
+  root_pass:
+    type: string
+    label: mysql root password
+    description: mysql root password
+    default: Welcome123
+  db_name:
+    type: string
+    label: database name
+    description: database name
+    default: wordpress
+  db_user:
+    type: string
+    label: database user
+    description: database user
+    default: wordpress
+  db_pass:
+    type: string
+    label: database password
+    description: database password
+    default: Welcome123
+
+resources:
+  int_network:
+    type: lib/create-private-net.yaml
+    properties:
+      public_network: { get_param: public_network }
+      cidr: '10.10.10.0/24'
+  database_network:
+    type: lib/create-private-net.yaml
+    properties:
+      public_network: { get_param: public_network }
+      cidr: '10.10.20.0/24'
+  database:
+    type: lib/mysql_instance.yaml
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key: { get_param: key }
+      private_network: { get_attr: [database_network, name] }
+      root_pass: {get_param: root_pass}
+      db_name: { get_param: db_name }
+      db_user: { get_param: db_user }
+      db_pass: { get_param: db_pass }
+  wordpress:
+    type: lib/wordpress_instance.yaml
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key: { get_param: key }
+      int_network: { get_attr: [int_network, name] }
+      database_network: { get_attr: [database_network, name] }
+      mysql_server: { get_attr: [database, instance_ip] }
+      db_name: { get_param: db_name }
+      db_user: { get_param: db_user }
+      db_pass: { get_param: db_pass }
+  floating_ip:
+    type: lib/floatingip.yaml
+    properties:
+      public_network: {get_param: public_network}
+      port: {get_attr: [wordpress, instance_int_port]}
+      
+outputs:
+  web_name:
+    description: Name of the webserver 
+    value: { get_attr: [wordpress, name] }
+  web_public_ip:
+    description: Floating IP of Instance
+    value: { get_attr: [floating_ip, ip ] }

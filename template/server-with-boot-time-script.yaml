@@ -1,0 +1,64 @@
+heat_template_version: 2013-05-23
+
+description: Simple template to deploy a single compute instance
+
+parameters:
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for compute instance
+    default: HaU14new
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used
+    default: m1.small
+  key:
+    type: string
+    label: Key name
+    description: Name of key-pair to be used for compute instance
+    default: my_key
+  private_network:
+    type: string
+    label: Private network name or ID
+    description: Network to attach instance to.
+    default: priv_net
+
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key }
+      networks:
+        - port: { get_resource: neutron_port }
+      user_data: |
+        #!/bin/sh
+        apt-get update -y
+        apt-get install apache2 -y
+        echo "<h1> VNPT Software </h1>" > /var/www/html/index.html
+      user_data_format: RAW
+  neutron_port:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: True
+      network: int_net
+      fixed_ips:
+        - subnet: int_net
+  floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: 17a29699-5737-4645-85c6-a46460b4f136
+      port_id: { get_resource: neutron_port }
+      
+outputs:
+  instance_name:
+    description: Name of the instance
+    value: { get_attr: [my_instance, name] }
+  instance_ip:
+    description: IP address of the instance
+    value: { get_attr: [my_instance, first_address] }
+  instance_public_ip:
+    description: Floating IP of Instance
+    value: { get_attr: [ floating_ip, floating_ip_address ] }
