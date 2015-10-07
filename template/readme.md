@@ -31,9 +31,13 @@ This template will deploy 2 VM with Apache and Mysql DB on each node, using a pr
 
 - Without create 2 Private Networks
 
-`heat stack-create -f vm-web-db-2node-v1.yaml -P key=demo_key single-vm`
+`heat stack-create -f vm-web-db-2node-v1.yaml -P key=demo_key two-vm-01`
 
 - Create 2 new Private Networks
 
-`heat stack-create -f vm-web-db-2node-v2.yaml -P key=demo_key single-vm`
+`heat stack-create -f vm-web-db-2node-v2.yaml -P key=demo_key two-vm-02`
+
+- With user define environment:
+
+`heat stack-create -f vm-web-db-2node-v3.yaml -e lib\env.yaml -P key=demo_key two-vm-03`
 
