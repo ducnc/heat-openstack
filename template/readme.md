@@ -37,3 +37,6 @@ This template will deploy 2 VM with Apache and Mysql DB on each node, using a pr
 
 `heat stack-create -f vm-web-db-2node-v2.yaml -P key=demo_key single-vm`
 
+or:
+
+`heat stack-create -f vm-web-db-2node-v3.yaml -P key=demo_key single-vm`

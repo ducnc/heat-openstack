@@ -90,4 +90,11 @@ outputs:
     value: { get_attr: [wordpress, name] }
   web_public_ip:
     description: Floating IP of Instance
-    value: { get_attr: [wordpress, instance_public_ip ] }
+    value: { get_attr: [floating_ip, ip ] }
+  URL:
+    description: Website URL
+    value:
+      str_replace:
+        template: http://host/wordpress
+        params:
+          host: { get_attr: [floating_ip, ip ] }
