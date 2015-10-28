@@ -22,7 +22,8 @@ Các thành phần của HOT được chia thành các section như sau:
 #Phần này cho phép xác định các thông số đầu vào mà phải được cung cấp khi sử dụng template.phần này là tùy chọn và có thể bỏ qua nếu như không yêu cầu tham số đầu vào
 
 -  resources
-#định nghĩa các resource được sử dụng trong template, cần ít nhất 1 resource trong template
+#định nghĩa các resource được sử dụng trong template, cần ít nhất 1 resource trong template, nó chính là sản phầm và mục đích của template.
+VD: Khi viết một template để tạo ra các Router, dải mạng, VM thì lúc này cần định nghĩa resources là Router, VM, dải mạng
 
 - outputs
 #cho phép xác định các thông số đầu ra có sẵn cho người dùng một khi mẫu được khởi tạo, đây là phần tùy chọn và có thể được bỏ qua khi không có giá trị sản lượng được yêu cầu.
@@ -91,15 +92,17 @@ parameters:
 
 `description`: A human readable description for the parameter. This attribute is optional.
 
-`default`: giá trị mặc định được sử dụng nếu người dùng không truyền giá trị vào. This attribute is optional.
+`default`: giá trị mặc định được sử dụng nếu người dùng không truyền giá trị vào. Đây là giá trị tùy chọn
 
-`hidden`: Defines whether the parameters should be hidden when a user requests information about a stack created from the template. This attribute can be used to hide passwords specified as parameters. This attribute is optional and defaults to false.
+`hidden`: Được dùng để hẩn thông tin của param khi ra show template. Giá trị này là tùy chọn và mặc định nó có giá trị là False.
 
-`constraints`: A list of constraints to apply. The constraints are validated by the Orchestration engine when a user deploys a stack. The stack creation fails if the parameter value doesn’t comply to the constraints. This attribute is optional. http://docs.openstack.org/developer/heat/template_guide/hot_spec.html#parameter-constraints
+`constraints`: Đây là điều kiện ràng buộc của param. Khi khai báo param thì nó sẽ check xem thông số của param có trong hệ thống không. Đây là trường tùy chọn http://docs.openstack.org/developer/heat/template_guide/hot_spec.html#parameter-constraints
 
 
-4. resource sectionxác định nguồn lực thực tế làm nên 1 stack được deploy từ template
+4. resource section
 ========
+
+Xác định nguồn lực thực tế làm nên 1 stack được deploy từ template hay chính là sản phẩm của template đó.
 
 ```sh
 resources:
@@ -114,9 +117,9 @@ resources:
     deletion_policy: <deletion policy>
 ```
 
-`resource ID`: A resource ID which must be unique within the resources section of the template.
+`resource ID`: ID của Resource ( tên của Resource ) và giá trị này là duy nhất trong template
 
-`type`: The resource type, such as OS::Nova::Server or OS::Neutron::Port. This attribute is required.
+`type`: Loại Resource, ví dụ như: OS::Nova::Server or OS::Neutron::Port. Giá trị này bắt buộc phải có trong Resource và tùy theo Resouce mà cần chỉ ra loại. VD như Resouce là VM thì cần định nghĩa loại là OS::Nova::Server
 
 `properties`: A list of resource-specific properties. The property value can be provided in place, or via a function (see Intrinsic functions). This section is optional.
 
